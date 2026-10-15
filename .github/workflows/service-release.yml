@@ -45,6 +45,10 @@ jobs:
           service="${raw%/v*}"
           version="${raw#${service}/}"
           context=$(jq -r --arg name "$service" '.[] | select(.name == $name) | .context' .github/services.json)
+          if [ -z "$context" ]; then
+            echo "Service '$service' not found in .github/services.json, skipping."
+            exit 0
+          fi
           dockerfile=$(jq -r --arg name "$service" '.[] | select(.name == $name) | .dockerfile // ""' .github/services.json)
           echo "service=$service" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -74,7 +78,6 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ steps.parse.outputs.service }}
           tags: |
             type=semver,pattern={{version}},prefix=v,value=${{ steps.parse.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},prefix=v,value=${{ steps.parse.outputs.version }}
             type=semver,pattern={{major}},enable=${{ !startsWith(steps.parse.outputs.version, 'v0.') }},prefix=v,value=${{ steps.parse.outputs.version }}
             type=raw,value=${{ github.sha }}
             type=sha,enable=true,format=short,prefix=
