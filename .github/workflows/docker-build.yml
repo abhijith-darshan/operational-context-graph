@@ -59,11 +59,14 @@ jobs:
 
       - name: Build matrix
         id: set
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          FILTER_CHANGES: ${{ steps.filter.outputs.changes }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             changed=$(jq -c '[.[].name]' .github/services.json)
           else
-            changed='${{ steps.filter.outputs.changes }}'
+            changed="$FILTER_CHANGES"
           fi
 
           include=$(jq -c --argjson changed "$changed" '

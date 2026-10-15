@@ -33,9 +33,12 @@ jobs:
 
       - name: Parse service and version from tag
         id: parse
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            raw="${{ github.event.inputs.tag }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            raw="$INPUT_TAG"
           else
             raw="${GITHUB_REF#refs/tags/}"
           fi

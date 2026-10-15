@@ -78,10 +78,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check if all builds passed
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
         run: |
-          if [ "${{ needs.build.result }}" == "success" ] || [ "${{ needs.build.result }}" == "skipped" ]; then
-            echo "✅ All Docker build checks passed"
+          if [ "$BUILD_RESULT" == "success" ] || [ "$BUILD_RESULT" == "skipped" ]; then
+            echo "All Docker build checks passed"
           else
-            echo "❌ Docker build checks failed"
+            echo "Docker build checks failed"
             exit 1
           fi
