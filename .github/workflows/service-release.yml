@@ -19,7 +19,7 @@ env:
 
 jobs:
   build-push:
-    name: Build (${{ steps.parse.outputs.service }})
+    name: Build (${{ github.ref_name }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
