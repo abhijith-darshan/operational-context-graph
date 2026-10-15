@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: 2026 SAP SE or an SAP affiliate company and Operational Context Graph contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+---
+name: PR Docker build check
+
+on:
+  pull_request:
+
+jobs:
+  detect-changes:
+    name: Detect changed services
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate paths-filter config
+        run: |
+          shared="
+            - 'proto/**'
+            - 'buf.yaml'
+            - 'buf.gen.yaml'
+            - '.github/workflows/pr-build.yml'
+            - '.github/services.json'"
+
+          jq -c '.[]' .github/services.json | while read -r svc; do
+            name=$(echo "$svc" | jq -r '.name')
+            has_paths=$(echo "$svc" | jq 'has("paths")')
+            echo "${name}:"
+            if [ "$has_paths" = "true" ]; then
+              echo "$svc" | jq -r '.paths[] | "  - '\''" + . + "'\''"'
+            else
+              echo "  - 'services/${name}/**'"
+            fi
+            echo "$shared"
+          done > .github/services-filter.yml
+
+          cat .github/services-filter.yml
+
+      - name: Filter changed services
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: .github/services-filter.yml
+
+  build:
+    name: Build (${{ matrix.service }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.services != '[]' && needs.detect-changes.outputs.services != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.detect-changes.outputs.services) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build Docker image
+        run: make docker-build
+        working-directory: services/${{ matrix.service }}
+
+  checks-ok:
+    name: Docker build checks passed
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if all builds passed
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          if [ "$BUILD_RESULT" == "success" ] || [ "$BUILD_RESULT" == "skipped" ]; then
+            echo "All Docker build checks passed"
+          else
+            echo "Docker build checks failed"
+            exit 1
+          fi
