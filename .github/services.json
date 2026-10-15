@@ -1,0 +1,19 @@
+[
+  {
+    "name": "data-ingestion",
+    "context": "services/data-ingestion"
+  },
+  {
+    "name": "ocg",
+    "context": ".",
+    "paths": [
+      "services/ocg/**",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml"
+    ]
+  },
+  {
+    "name": "knowledge-api",
+    "context": "services/knowledge-api"
+  }
+]
