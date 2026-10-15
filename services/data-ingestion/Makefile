@@ -4,9 +4,10 @@
 
 SHELL := /usr/bin/env bash
 
+IMG ?= ctx/data-ingestion:local
 COVERAGE_DIR ?= $(CURDIR)/coverage
 
-.PHONY: build run test lint vet tidy mocks
+.PHONY: build run test lint vet tidy mocks docker-build
 
 build: ## Build the data-ingestion service
 	go build ./...
@@ -33,3 +34,6 @@ tidy: ## Tidy go.mod
 
 mocks: ## Generate mocks (requires mockery)
 	mockery
+
+docker-build: ## Build the Docker image locally
+	docker build -t $(IMG) .
