@@ -6,6 +6,7 @@
   {
     "name": "ocg",
     "context": ".",
+    "dockerfile": "services/ocg/Dockerfile",
     "paths": [
       "services/ocg/**",
       "pnpm-lock.yaml",
