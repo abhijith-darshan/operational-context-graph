@@ -71,8 +71,8 @@ jobs:
         run: make docker-build
         working-directory: services/${{ matrix.service }}
 
-  checks-ok:
-    name: Docker build checks passed
+  checksOK:
+    name: ChecksOk
     needs: [build]
     if: always()
     runs-on: ubuntu-latest
